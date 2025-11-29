@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>时光记录 Pro v2.1</title>
+    <style>
+        /* 基础样式重置 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background-color: #F2F2F7;
+            margin: 0; padding: 0; color: #000;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .container {
+            max-width: 450px; margin: 0 auto; min-height: 100vh; padding-bottom: 50px;
+        }
+
+        .navbar {
+            padding: 15px 20px; font-size: 28px; font-weight: 800;
+            display: flex; justify-content: flex-start; align-items: center;
+        }
+
+        /* 顶部大卡片 */
+        .hero-card {
+            margin: 10px 20px 30px 20px; height: 200px; border-radius: 24px;
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            box-shadow: 0 12px 25px rgba(0, 122, 255, 0.3);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; cursor: pointer; position: relative; overflow: hidden;
+        }
+        .hero-card:active { transform: scale(0.98); transition: transform 0.1s; }
+        
+        .hero-name { font-size: 24px; font-weight: 700; margin-bottom: 5px; opacity: 1; }
+        .hero-sub { font-size: 15px; opacity: 0.8; font-weight: 500; margin-bottom: 5px; }
+        .hero-num { font-size: 64px; font-weight: 800; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .hero-unit { font-size: 16px; opacity: 0.8; position: absolute; bottom: 20px; }
+
+        /* 列表标题区 */
+        .section-header { padding: 0 20px 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { font-size: 20px; font-weight: 700; color: #1c1c1e; }
+        .add-btn { 
+            background: #E5F1FF; color: #007AFF; width: 36px; height: 36px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; border: none; font-weight: bold; cursor: pointer;
+        }
+        .add-btn:active { background: #d1e3ff; }
+
+        /* 列表样式 */
+        .list-container { background-color: white; border-radius: 16px; margin: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .list-item {
+            padding: 18px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #F2F2F7;
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        .item-left { flex: 1; overflow: hidden; }
+        .item-left h3 { margin: 0; font-size: 17px; font-weight: 600; color: #1c1c1e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-left p { margin: 4px 0 0 0; font-size: 13px; color: #8E8E93; }
+        
+        .item-right { display: flex; align-items: center; gap: 12px; }
+        .days-tag {
+            padding: 6px 12px; border-radius: 8px; font-size: 15px; font-weight: 700; min-width: 60px; text-align: center;
+        }
+        .days-blue { background: #E5F1FF; color: #007AFF; }
+        .days-red { background: #FFE5E5; color: #FF3B30; }
+
+        .delete-icon {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background-color: #F2F2F7; color: #8E8E93; border: none; font-size: 20px; cursor: pointer;
+        }
+        .delete-icon:active { background-color: #FF3B30; color: white; }
+
+        /* 弹窗通用样式 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
+            display: none; justify-content: center; align-items: flex-end; z-index: 999;
+        }
+        .modal {
+            background: white; width: 100%; max-width: 450px;
+            border-radius: 24px 24px 0 0; padding: 30px 25px 40px 25px; box-sizing: border-box;
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal h3 { margin: 0 0 20px 0; font-size: 20px; text-align: center; }
+        
+        label { display: block; font-size: 14px; color: #8E8E93; margin-bottom: 6px; margin-top: 15px; }
+        
+        input { 
+            width: 100%; padding: 14px; border: 1px solid #E5E5EA; background: #F9F9F9;
+            border-radius: 12px; font-size: 17px; box-sizing: border-box; outline: none; -webkit-appearance: none;
+        }
+        input:focus { background: white; border-color: #007AFF; }
+
+        .btn-row { display: flex; gap: 15px; margin-top: 30px; }
+        .btn { flex: 1; padding: 15px; border-radius: 14px; border: none; font-size: 17px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { background: #F2F2F7; color: #8E8E93; }
+        .btn-save { background: #007AFF; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="navbar">时光记录</div>
+
+    <div class="hero-card" onclick="openSettingsModal()">
+        <div class="hero-name" id="displayUserName">我</div>
+        <div class="hero-sub">已在这个世界生活了</div>
+        <div class="hero-num" id="daysAlive">0</div>
+        <div class="hero-unit">天</div>
+    </div>
+
+    <div class="section-header">
+        <div class="section-title">即将到来</div>
+        <button class="add-btn" onclick="openEventModal()">＋</button>
+    </div>
+
+    <div class="list-container" id="eventList">
+        <!-- JS 渲染区域 -->
+    </div>
+</div>
+
+<!-- 弹窗1：设置个人信息 -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <h3>设置个人信息</h3>
+        <label>你的称呼</label>
+        <input type="text" id="userNameInput" placeholder="例如：小明">
+        <label>出生日期</label>
+        <input type="date" id="birthInput">
+        <div class="btn-row">
+            <button class="btn btn-cancel" onclick="closeModal('settingsModal')">取消</button>
+            <button class="btn btn-save" onclick="saveSettings()">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗2：添加纪念日 -->
+<div class="modal-overlay" id="eventModal">
+    <div class="modal">
+        <h3>添加新纪念日</h3>
+        <label>纪念日名称</label>
+        <input type="text" id="eventTitle" placeholder="例如：结婚纪念日">
+        <label>选择日期</label>
+        <input type="date" id="eventDate">
+        <div class="btn-row">
+            <button class="btn btn-cancel" onclick="closeModal('eventModal')">取消</button>
+            <button class="btn btn-save" onclick="addEvent()">确认添加</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ----------------------
+    // 数据层
+    // ----------------------
+    let appData = {
+        username: localStorage.getItem('username') || '我',
+        birthDate: localStorage === null ? new Date().toISOString().split('T')[0] : (localStorage.getItem('birthDate') || new Date().toISOString().split('T')[0]),
+        events: []
+    };
+
+    // 初始化数据：强制将所有ID转为字符串，确保类型统一
+    try {
+        const rawEvents = JSON.parse(localStorage.getItem('events')) || [];
+        appData.events = rawEvents.map(e => ({
+            ...e, 
+            id: String(e.id || Date.now() + Math.random()) // 关键修改：转字符串
+        }));
+    } catch(e) {
+        appData.events = [];
+    }
+
+    // ----------------------
+    // 逻辑层
+    // ----------------------
+
+    function init() {
+        renderHero();
+        renderList();
+    }
+
+    function renderHero() {
+        document.getElementById('displayUserName').innerText = appData.username;
+        const start = new Date(appData.birthDate);
+        const now = new Date();
+        const diffTime = Math.abs(now - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        document.getElementById('daysAlive').innerText = diffDays;
+    }
+
+    function renderList() {
+        const list = document.getElementById('eventList');
+        list.innerHTML = '';
+
+        if (appData.events.length === 0) {
+            list.innerHTML = '<div style="padding:30px; text-align:center; color:#ccc;">暂无纪念日，点击右上角添加</div>';
+            return;
+        }
+
+        appData.events.sort((a, b) => getDaysUntil(a.date) - getDaysUntil(b.date));
+
+        appData.events.forEach((item) => {
+            const daysLeft = getDaysUntil(item.date);
+            const isToday = daysLeft === 0;
+            const daysText = isToday ? '今天' : `${daysLeft}天`;
+            const tagClass = isToday ? 'days-red' : 'days-blue';
+
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            
+            // 注意：onclick 中的 requestDelete 使用字符串 ID，并避免 setTimeout
+            div.innerHTML = `
+                <div class="item-left">
+                    <h3>${item.title}</h3>
+                    <p>${item.date}</p>
+                </div>
+                <div class="item-right">
+                    <div class="days-tag ${tagClass}">${daysText}</div>
+                    <button class="delete-icon" onclick="requestDelete('${item.id}')">×</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function getDaysUntil(dateString) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const targetDate = new Date(dateString);
+        
+        const currentYear = today.getFullYear();
+        let nextDate = new Date(currentYear, targetDate.getMonth(), targetDate.getDate());
+        
+        if (nextDate < today) {
+            nextDate.setFullYear(currentYear + 1);
+        }
+        
+        const diffTime = nextDate - today;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    }
+
+    // ----------------------
+    // 交互动作
+    // ----------------------
+
+    window.openSettingsModal = function() {
+        document.getElementById('userNameInput').value = appData.username;
+        document.getElementById('birthInput').value = appData.birthDate;
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    window.saveSettings = function() {
+        const nameVal = document.getElementById('userNameInput').value.trim();
+        const dateVal = document.getElementById('birthInput').value;
+        
+        if(dateVal) {
+            appData.username = nameVal || '我';
+            appData.birthDate = dateVal;
+            localStorage.setItem('username', appData.username);
+            localStorage.setItem('birthDate', appData.birthDate);
+            renderHero();
+            closeModal('settingsModal');
+        } else {
+            alert("请选择出生日期");
+        }
+    }
+
+    window.addEvent = function() {
+        const title = document.getElementById('eventTitle').value.trim();
+        const date = document.getElementById('eventDate').value;
+        
+        if(!title || !date) {
+            alert("请输入完整的标题和日期");
+            return;
+        }
+
+        const newEvent = {
+            id: String(Date.now()), // 创建时直接存为字符串
+            title: title,
+            date: date
+        };
+
+        appData.events.push(newEvent);
+        saveAndRender();
+        
+        document.getElementById('eventTitle').value = '';
+        document.getElementById('eventDate').value = '';
+        closeModal('eventModal');
+    }
+
+    // ✅ 修复后的删除函数：同步调用 confirm，确保浏览器允许
+    window.requestDelete = function(id) {
+        if (confirm("确定要删除这条纪念日吗？")) {
+            const targetId = String(id);
+            const index = appData.events.findIndex(item => String(item.id) === targetId);
+            if (index > -1) {
+                appData.events.splice(index, 1);
+                saveAndRender();
+            }
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('events', JSON.stringify(appData.events));
+        renderList();
+    }
+
+    window.openEventModal = function() { document.getElementById('eventModal').style.display = 'flex'; }
+    window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
+
+    init();
+</script>
+</body>
+</html>
